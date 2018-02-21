@@ -24,11 +24,15 @@ def histogram(pdb_file):
 			currentDistance = np.linalg.norm(CAi-CAj);
 			caDistances.append(currentDistance);
 
-	plt.hist(caDistances,50);
-	plt.xlabel("CA distances");
-	plt.ylabel("Frequency");
-	plt.title("Histogram of CA distances");
-	plt.show()
+#	plt.hist(caDistances,50);
+#	plt.xlabel("CA distances");
+#	plt.ylabel("Frequency");
+#	plt.title("Histogram of CA distances");
+#	plt.show()
+
+	print(caDistances);
+
+	return caDistances;
 
 histogram(PDB_FILE);
 histogram("2b7h.pdb");
