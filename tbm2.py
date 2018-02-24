@@ -8,11 +8,11 @@ def distance(point1, point2):
     sqrtDistance = np.sqrt(squareDistance)
     return sqrtDistance
 
-def pdf(tarDistance, temDistance, sigma=1):
+def pdf(tarDistance, temDistance, sigma):
     prob = 1/(sigma * np.sqrt(2*math.pi)) * np.exp(-1/2*((tarDistance - temDistance)/sigma)**2)
     return prob
 
-def objProb(tarPoints, temPoints, temW, sigma=1):
+def objProb(tarPoints, temPoints, temW, sigma):
     # Get number of points, and number of templates
     nTarPts = tarPoints.shape[0]
     nTemplates = temPoints.shape[0]
@@ -40,7 +40,7 @@ def objProb(tarPoints, temPoints, temW, sigma=1):
     for k in range(0,nTemplates):
         for i in range(0,nTarPts-1):
             for j in range(i+1,nTarPts):
-                pdfArray[k,i,j] = temW[k] * pdf(tarDisArray[i,j], temDisArray[k,i,j])
+                pdfArray[k,i,j] = temW[k] * pdf(tarDisArray[i,j], temDisArray[k,i,j], sigma)
                 # pdfArray[k,j,i] = pdfArray[k,i,j]
                 cacheArray[k,i,j] = pdfArray[k,i,j] * (tarDisArray[i,j] - temDisArray[k,i,j]) / (sigma**2) # for gradient calculation
 
@@ -86,13 +86,12 @@ def gradient(tarPoints, tarDisArray, sumPdf, sumCache):
     return gradFd, gradFpoints
 
 
-def gradDescent(tarPoints0, temPoints, temW, alpha=0.05, tolerance=10**(-5), maxiter=100):
+def gradDescent(tarPoints0, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=100):
 
     tarPoints = tarPoints0
-    sigma = 1
     tarDisArray, temDisArray, pdfArray, sumPdf, sumCache, productPdf, logPdf = objProb(tarPoints, temPoints, temW, sigma)
     iter = 0
-    error = 0.1
+    error = 0.5
     while (iter < maxiter) and (error > tolerance):
 
         gradFd, gradFpoints = gradient(tarPoints, tarDisArray, sumPdf, sumCache)
@@ -151,8 +150,10 @@ def main():
     temPoints = np.random.randint(30, size=(2,5,3))/30.0
     temW = [0.4, 0.6]
 
+    sigma = 2
+
     # Optimize by gd
-    optimalTarget = gradDescent(tarPoints, temPoints, temW, alpha=0.05, tolerance=10**(-5), maxiter=100)
+    optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=200)
     print('optimalTarget: \n', optimalTarget)
 
     return
