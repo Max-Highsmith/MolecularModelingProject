@@ -48,7 +48,7 @@ def objProb(tarPoints, temPoints, temW, sigma=1):
     sumPdf = np.sum(pdfArray, axis=0)
     sumCache = np.sum(cacheArray, axis=0) # for gradient calculation
 
-    # Multiply over half of sumPdf (not inluce diagonal):
+    # Multiply over half of sumPdf (not include diagonal):
     upperPdf_noDiag = np.triu(sumPdf, k=1)
     productPdf = np.prod(upperPdf_noDiag[upperPdf_noDiag > 0])
 
@@ -115,8 +115,23 @@ def gradDescent(tarPoints0, temPoints, temW, alpha=0.05, tolerance=10**(-5), max
 
     return tarPoints
 
-def writePoints():
+def writePoints(inFile, outFile, optimalPoints):
+    parser = pdb.PDBParser()
+    struct = parser.get_structure('target', inFile)
 
+    optimalPoints = np.array(optimalPoints)
+
+    for model in struct:
+        for chain in model:
+            for res in chain:
+                i = 0
+                for atom in res:
+                    atom.coord = optimalPoints[i,:]
+                    i += 1
+
+    io = pdb.PDBIO()
+    io.set_structure(struct)
+    io.save(outFile)
     return
 
 def showProtein():
