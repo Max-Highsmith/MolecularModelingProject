@@ -33,11 +33,3 @@ for alignment in blast_records[0].alignments:
 fh.close();
 print("done");
 
-
-			
-
-
-print("done");
-
-
-

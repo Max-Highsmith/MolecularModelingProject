@@ -13,16 +13,18 @@ def histogram(pdb_file):
 	coordinates = backbone.getCoords()
 	names = backbone.getNames();
 	numCA = int(names.size/4);
-	caDistances =[];
+#	caDistances =[];
+	caDistances = np.empty([numCA, numCA]);
 	psi =[];
 	for i in range(0, numCA):
-		for j in range(i, numCA):
+		for j in range(0, numCA):
 			indexI= 4*i+1
 			indexJ= 4*j+1;
 			CAi = coordinates[indexI, 0:3];
 			CAj = coordinates[indexJ, 0:3];
 			currentDistance = np.linalg.norm(CAi-CAj);
-			caDistances.append(currentDistance);
+			#caDistances.append(currentDistance);
+			caDistances[i][j] = currentDistance;
 
 #	plt.hist(caDistances,50);
 #	plt.xlabel("CA distances");
@@ -30,7 +32,7 @@ def histogram(pdb_file):
 #	plt.title("Histogram of CA distances");
 #	plt.show()
 
-	print(caDistances);
+	print(caDistances[1:10,1:10]);
 
 	return caDistances;
 
