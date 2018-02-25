@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import Bio.PDB as pdb
 
 
 
@@ -116,6 +117,21 @@ def gradDescent(tarPoints0, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-
 
     return tarPoints
 
+def getTemplate(temFile):
+    parser = pdb.PDBParser()
+    struct = parser.get_structure('template', temFile)
+
+    temPoints = list()
+    for model in struct:
+        for chain in model:
+            for res in chain:
+                for atom in res:
+                   if (atom.name == 'CA'):
+                        vector = atom.get_vector()
+                        temPoints.append(list(vector))
+
+    return np.array(temPoints)
+
 def writePoints(inFile, outFile, optimalPoints):
     parser = pdb.PDBParser()
     struct = parser.get_structure('target', inFile)
@@ -147,18 +163,31 @@ def showFunction():
 
 
 def main():
-    # Generate simulated data
     nseed = 1
     np.random.seed(nseed)
-    tarPoints = np.random.randint(30, size=(5,3))/30.0
-    temPoints = np.random.randint(30, size=(2,5,3))/30.0
-    temW = [0.4, 0.6]
+    # tarPoints = np.random.randint(30, size=(5,3))/30.0
+    # temPoints = np.random.randint(30, size=(2,5,3))/30.0
+    tarFile = '1fdx.B99990001.pdb'
+    temFile = '1fdx.B99990001.pdb'
+    outFile = 'new_out.pdb'
+    
+    temPoints = getTemplate(temFile)
+    tarPoints = temPoints - np.random.rand(temPoints.shape[0], temPoints.shape[1])*10
+    temPoints = np.reshape(temPoints, (1,temPoints.shape[0], temPoints.shape[1]))
+    # tarPoints = np.random.randint(15, 20, size=(temPoints.shape[1],3))/1.0
 
-    sigma = 2
+    # tarPoints = tarPoints.astype(float)
+    # temPoints = temPoints.astype(float)
 
-    # Optimize by gd
-    optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=200)
+    # temW = [0.4, 0.6]
+    temW = [1.0]
+
+    sigma = 0.5
+
+    optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=500)
     print('optimalTarget: \n', optimalTarget)
+
+    # writePoints(tarFile, outFile, optimalTarget)
 
     return
 
