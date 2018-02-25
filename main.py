@@ -19,11 +19,13 @@ def pdf(tarDistance, temDistance, sigma):
     prob = 1/(sigma * np.sqrt(2*math.pi)) * np.exp(-1/2*((tarDistance - temDistance)/sigma)**2)
     return prob
 
+
+#template ='.pdb'
 def getXYZCoords(template):
     numTemplate =1;
     backbone = parsePDB(template, subset='bb');
     coordinates = backbone.getCoords()
-    names = backbone,getNames();
+    names = backbone.getNames();
     numCA = int(names.size/4);
     caXYZ  = np.empty([numTemplate,numCA, 3])
     for i in range(0, numCA):
@@ -61,6 +63,10 @@ def objProb(tarPoints, temPoints, temW, temfile, sigma):
     for k in range(0,nTemplates):
         for i in range(0,nTarPts-1):
             for j in range(i+1,nTarPts):
+                print("i")
+                print(i)
+                print(j)	
+                print(k)
                 pdfArray[k,i,j] = temW[k] * pdf(tarDisArray[i,j], temDisArray[k,i,j], sigma)
                 # pdfArray[k,j,i] = pdfArray[k,i,j]
                 cacheArray[k,i,j] = pdfArray[k,i,j] * (tarDisArray[i,j] - temDisArray[k,i,j]) / (sigma**2) # for gradient calculation
@@ -165,8 +171,14 @@ def showFunction():
 
     return
 
+from prody import *
+from pylab import *
+import Bio.PDB as pdb
+
 def getNumCATemp(temfile):
     backbone = parsePDB(temfile, subset='bb')
+    coordinates = backbone.getCoords()
+    names = backbone.getNames()
     numCA = int(names.size/4);
     return numCA;
 
@@ -174,9 +186,29 @@ def getNumCATarget(tarfile):
     fasta_string = open(tarfile).read();
     return len(fasta_string);
     
-def alignmentParsing(pirfile):
-    
 
+from Bio import AlignIO
+def alignmentParsing(pirFile, lenTar):
+	align = AlignIO.read(pirFile, "pir")
+	numAlign = len(align)
+	useThisAlign = np.zeros(numAlign, lenTar)
+	for i in range(1,2):#len(align)		
+		name = align[i].name
+		descript = align[i].description
+		seq  = align[i].seq
+		startPointIndex = descript.find(name) + len(name)+1
+		startPoint = descript[startPointIndex:startPointIndex+3]  #assuming only will reach 3 digit
+		startPoint = int(startPoint)
+		for j in range(0, len(seq)):
+			if seq[j] == '_':
+				useThisAlign[i, j+startPoint] = -1
+			else:
+				useThisAlign[i, j+startPoint] = 1;
+				
+	return useThisAlign;
+				
+	#todo()
+	
 def main():
     # Generate simulated data
    # nseed = 1
@@ -184,12 +216,16 @@ def main():
 #    tarPoints = np.random.randint(30, size=(5,3))/30.0
  #   temPoints = np.random.randint(30, size=(2,5,3))/30.0
     numTemp = 1
+    temfile = '5fs4.pdb'
+    tarfile = 'T0859.fasta' 
     numTarCA = getNumCATarget(tarfile)
     numTemCA = getNumCATemp(temfile)
+    print("NUMTEMCA")
+    print(numTemCA)
     temPoints = np.zeros([numTemp, numTemCA, 3])
     tarPoints = np.zeros([numTarCA, 3])
     
-    temW = 1
+    temW = [1]
     
     sigma = .1
 
