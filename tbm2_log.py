@@ -168,11 +168,18 @@ def main():
     # tarPoints = np.random.randint(30, size=(5,3))/30.0
     # temPoints = np.random.randint(30, size=(2,5,3))/30.0
     tarFile = '1fdx.B99990001.pdb'
-    temFile = '1fdx.B99990001.pdb'
+    temFile = '5fd1.pdb'
     outFile = 'new_out.pdb'
     
     temPoints = getTemplate(temFile)
-    tarPoints = temPoints - np.random.rand(temPoints.shape[0], temPoints.shape[1])*10
+    tem1 = temPoints[0:7, :]
+    tem2 = temPoints[10:27, :]
+    tem3 = temPoints[30:57, :]
+    temPoints = np.vstack((tem1,tem2,tem3))
+#    temPoints = tem1
+    
+    tarPoints = np.random.rand(temPoints.shape[0], temPoints.shape[1])*10
+    
     temPoints = np.reshape(temPoints, (1,temPoints.shape[0], temPoints.shape[1]))
     # tarPoints = np.random.randint(15, 20, size=(temPoints.shape[1],3))/1.0
 
@@ -182,12 +189,12 @@ def main():
     # temW = [0.4, 0.6]
     temW = [1.0]
 
-    sigma = 0.5
+    sigma = 0.3
 
     optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=500)
     print('optimalTarget: \n', optimalTarget)
 
-    # writePoints(tarFile, outFile, optimalTarget)
+    writePoints(tarFile, outFile, optimalTarget)
 
     return
 
