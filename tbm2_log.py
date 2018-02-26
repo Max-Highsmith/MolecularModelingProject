@@ -2,6 +2,11 @@ import numpy as np
 import math
 import Bio.PDB as pdb
 
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 
 def distance(point1, point2):
@@ -89,7 +94,7 @@ def gradient(tarPoints, tarDisArray, sumPdf, sumCache):
     return gradFd, gradFpoints
 
 
-def gradDescent(tarPoints0, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=100):
+def gradDescent(tarPoints0, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=200):
 
     tarPoints = tarPoints0
     tarDisArray, temDisArray, pdfArray, sumPdf, sumCache, productPdf, logPdf = objProb(tarPoints, temPoints, temW, sigma)
@@ -137,11 +142,11 @@ def writePoints(inFile, outFile, optimalPoints):
     struct = parser.get_structure('target', inFile)
 
     optimalPoints = np.array(optimalPoints)
+    i = 0
 
     for model in struct:
         for chain in model:
             for res in chain:
-                i = 0
                 for atom in res:
                     if (atom.name == 'CA'):
                         atom.coord = optimalPoints[i,:]
@@ -171,15 +176,13 @@ def main():
     temFile = '5fd1.pdb'
     outFile = 'new_out.pdb'
     
-    temPoints = getTemplate(temFile)
-    tem1 = temPoints[0:7, :]
-    tem2 = temPoints[10:27, :]
-    tem3 = temPoints[30:57, :]
-    temPoints = np.vstack((tem1,tem2,tem3))
-#    temPoints = tem1
-    
-    tarPoints = np.random.rand(temPoints.shape[0], temPoints.shape[1])*10
-    
+    temPoints0 = getTemplate(temFile)
+    tem1 = temPoints0[0:8, :]
+    tem2 = temPoints0[10:28, :]
+    tem3 = temPoints0[30:58, :]
+    temPoints = np.vstack((tem1, tem2, tem3))
+
+    tarPoints = temPoints - np.random.rand(temPoints.shape[0], temPoints.shape[1])*10
     temPoints = np.reshape(temPoints, (1,temPoints.shape[0], temPoints.shape[1]))
     # tarPoints = np.random.randint(15, 20, size=(temPoints.shape[1],3))/1.0
 
@@ -189,10 +192,21 @@ def main():
     # temW = [0.4, 0.6]
     temW = [1.0]
 
-    sigma = 0.3
+    sigma = 0.5
 
-    optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.05, tolerance=10**(-5), maxiter=500)
+    optimalTarget = gradDescent(tarPoints, temPoints, temW, sigma, alpha=0.01, tolerance=10**(-5), maxiter=1000)
     print('optimalTarget: \n', optimalTarget)
+
+    # %% VISUALIZE
+    mpl.rcParams['legend.fontsize'] = 10
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(temPoints[0,:,0], temPoints[0,:,1], temPoints[0,:,2], label='template')
+    ax.plot(optimalTarget[:,0], optimalTarget[:,1], optimalTarget[:,2], label='target approximation')
+    ax.legend(['Template','Target Fit'])
+    fig.savefig('new_out.png')
+    plt.show()
+
 
     writePoints(tarFile, outFile, optimalTarget)
 
