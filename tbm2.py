@@ -53,7 +53,9 @@ def objProb(tarPoints, temPoints, temW, sigma):
     productPdf = np.prod(upperPdf_noDiag[upperPdf_noDiag > 0])
 
     # Log
-    logPdf = - np.log(productPdf)
+    # logPdf = - np.log(productPdf)
+    logArray = -np.log(upperPdf_noDiag[upperPdf_noDiag > 0])
+    logPdf = np.sum(logArray)
     print('logPdf: ', logPdf)
 
     return tarDisArray, temDisArray, pdfArray, sumPdf, sumCache, productPdf, logPdf
@@ -125,8 +127,10 @@ def writePoints(inFile, outFile, optimalPoints):
             for res in chain:
                 i = 0
                 for atom in res:
-                    atom.coord = optimalPoints[i,:]
-                    i += 1
+                    if (atom.name == 'CA'):
+                        atom.coord = optimalPoints[i,:]
+                        i += 1
+
 
     io = pdb.PDBIO()
     io.set_structure(struct)
